@@ -2,13 +2,15 @@ import asyncio
 import uuid
 from datetime import datetime
 from typing import List, Tuple, Optional, Dict, Any
-# import prefect
+
+import requests
+#import prefect
 from prefect import flow, task, get_run_logger, Task, unmapped
-from prefect_aws.batch import batch_submit
-from prefect_aws import AwsCredentials
-import prefect_utils.aws as _prefect_aws
-from prefect_utils.aws import wait_for_batch_job, wait_for_batch_jobs
-from itertools import chain
+# from prefect_aws.batch import batch_submit
+# from prefect_aws import AwsCredentials
+# import prefect_utils.aws as _prefect_aws
+# from prefect_utils.aws import wait_for_batch_job, wait_for_batch_jobs
+# from itertools import chain
 from itertools import cycle
 import random
 
@@ -73,17 +75,31 @@ async def run_in_chunks(batch_kwargs_list: List[str],
     return True
 
 
-@flow
-async def chunk2_flow(total_size: int = 10, chunk_size: int = 5):
-    logger = get_run_logger()
-    batch_kwargs_list = []
-    job_names = []
-    for index in range(total_size):
-        batch_kwargs_list.append(f"kwarg:{index}")
-        job_names.append(f"test_job:{index}")
+@task
+async def call_api(url):
+    response = requests.get(url)
+    print(response.status_code)
+    return response.json()
 
-    result = await run_in_chunks.fn(batch_kwargs_list=batch_kwargs_list, job_names=job_names, chunk_size=chunk_size)
+
+@flow
+async def test_gh(total_size: int = 10, chunk_size: int = 5):
+    logger = get_run_logger()
+    url = "https://catfact.ninja/fact"
+    fact_json = await call_api(url)
+    logger.info(fact_json)
+
+    return
+
+    # logger = get_run_logger()
+    # batch_kwargs_list = []
+    # job_names = []
+    # for index in range(total_size):
+    #     batch_kwargs_list.append(f"kwarg:{index}")
+    #     job_names.append(f"test_job:{index}")
+    #
+    # result = await run_in_chunks.fn(batch_kwargs_list=batch_kwargs_list, job_names=job_names, chunk_size=chunk_size)
 
 
 if __name__ == "__main__":
-    main_flow_state = asyncio.run(chunk2_flow())
+    main_flow_state = asyncio.run(test_gh())

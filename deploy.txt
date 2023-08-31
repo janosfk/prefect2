@@ -1,0 +1,3 @@
+prefect deploy test_chunk_p4.py:test_gh -n gh1 -p msfragger-pool
+
+prefect deployment build  -n test_gh1 -a -p msfragger-pool -q test_gh_queue -ib ecs-task/flow-host -sb s3/seer-prefect-flows/test_gh test_gh.py:test_gh
